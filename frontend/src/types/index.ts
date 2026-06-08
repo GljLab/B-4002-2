@@ -1,6 +1,9 @@
 export interface AuthUser {
   id: number
   username: string
+  role: string
+  nickname: string
+  avatarUrl: string | null
 }
 
 export interface LoginPayload {
@@ -26,10 +29,14 @@ export interface PostSummary {
   id: number
   title: string
   excerpt: string
+  authorId: number
   authorName: string
+  authorAvatar: string | null
+  status: string
   categoryId: number | null
   categoryPath: string
   keywords: KeywordItem[]
+  viewCount: number
   createdAt: string
 }
 
@@ -37,12 +44,18 @@ export interface PostDetail {
   id: number
   title: string
   content: string
+  authorId: number
   authorName: string
+  authorAvatar: string | null
+  status: string
+  rejectionReason: string | null
   categoryId: number | null
   categoryPath: string
   categoryBreadcrumb: BreadcrumbItem[]
   keywords: KeywordItem[]
+  viewCount: number
   createdAt: string
+  updatedAt: string | null
 }
 
 export interface BreadcrumbItem {
@@ -134,4 +147,87 @@ export interface BatchUpdateCategoryPayload {
 export interface BatchAddKeywordsPayload {
   postIds: number[]
   keywords: string[]
+}
+
+export interface AuthorDTO {
+  id: number
+  username: string
+  nickname: string
+  avatarUrl: string | null
+  bio: string | null
+  enabled: boolean
+  role: string
+  createdAt: string
+  postCount: number
+  lastLoginAt: string | null
+}
+
+export interface AuthorPublicDTO {
+  id: number
+  nickname: string
+  username: string
+  avatarUrl: string | null
+  bio: string | null
+  postCount: number
+}
+
+export interface AuthorStatsDTO {
+  totalPublished: number
+  totalDraft: number
+  totalViews: number
+  avgViews: number
+  topPosts: PostSummary[]
+}
+
+export interface CreateAuthorPayload {
+  username: string
+  password: string
+  nickname?: string
+  avatarUrl?: string
+  bio?: string
+}
+
+export interface UpdateAuthorPayload {
+  nickname?: string
+  avatarUrl?: string
+  bio?: string
+}
+
+export interface UpdateProfilePayload {
+  nickname?: string
+  avatarUrl?: string
+  bio?: string
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string
+  newPassword: string
+}
+
+export interface ReviewActionPayload {
+  action: string
+  reason?: string
+}
+
+export interface BatchReviewPayload {
+  postIds: number[]
+  action: string
+  reason?: string
+}
+
+export interface AdminStatsDTO {
+  totalPosts: number
+  pendingPosts: number
+  totalAuthors: number
+  monthlyNewPosts: number
+  totalViews: number
+  authorRanking: AuthorRankItem[]
+}
+
+export interface AuthorRankItem {
+  id: number
+  nickname: string
+  avatarUrl: string | null
+  postCount: number
+  totalViews: number
 }

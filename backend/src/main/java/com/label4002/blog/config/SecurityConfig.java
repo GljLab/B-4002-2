@@ -56,15 +56,19 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/actuator/health", "/actuator/info").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/posts", "/api/v1/posts/*").permitAll();
+                    auth.requestMatchers(HttpMethod.GET, "/api/v1/authors", "/api/v1/authors/*").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/categories", "/api/v1/categories/*").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/keywords/cloud").permitAll();
                     auth.requestMatchers(HttpMethod.GET, "/api/v1/keywords/search").permitAll();
+                    auth.requestMatchers(HttpMethod.POST, "/api/v1/upload/image").authenticated();
                     auth.requestMatchers("/api/v1/auth/login", "/api/v1/token/login", "/api/v1/token/refresh").permitAll();
                     if (testingEnabled) {
                         auth.requestMatchers("/api/testing/**").permitAll();
                     }
                     auth.requestMatchers("/api/v1/token/secure/**").hasRole("TOKEN");
-                    auth.requestMatchers("/api/v1/auth/**", "/api/v1/admin/**").hasRole("ADMIN");
+                    auth.requestMatchers("/api/v1/admin/**").hasRole("ADMIN");
+                    auth.requestMatchers("/api/v1/author/**").hasRole("AUTHOR");
+                    auth.requestMatchers("/api/v1/auth/**").authenticated();
                     auth.anyRequest().denyAll();
                 })
                 .authenticationProvider(authenticationProvider)

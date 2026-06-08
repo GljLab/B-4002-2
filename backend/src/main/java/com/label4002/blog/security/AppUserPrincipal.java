@@ -1,5 +1,6 @@
 package com.label4002.blog.security;
 
+import com.label4002.blog.entity.UserRole;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,20 +14,23 @@ public class AppUserPrincipal implements UserDetails {
     private final String username;
     private final String password;
     private final List<GrantedAuthority> authorities;
+    private final boolean enabled;
 
-    public AppUserPrincipal(Long id, String username, String password, List<GrantedAuthority> authorities) {
+    public AppUserPrincipal(Long id, String username, String password, List<GrantedAuthority> authorities, boolean enabled) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.authorities = authorities;
+        this.enabled = enabled;
     }
 
-    public static AppUserPrincipal fromDatabase(Long id, String username, String password) {
+    public static AppUserPrincipal fromDatabase(Long id, String username, String password, UserRole role, boolean enabled) {
         return new AppUserPrincipal(
                 id,
                 username,
                 password,
-                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                List.of(new SimpleGrantedAuthority("ROLE_" + role.name())),
+                enabled
         );
     }
 
@@ -35,7 +39,8 @@ public class AppUserPrincipal implements UserDetails {
                 id,
                 username,
                 "",
-                List.of(new SimpleGrantedAuthority("ROLE_TOKEN"))
+                List.of(new SimpleGrantedAuthority("ROLE_TOKEN")),
+                true
         );
     }
 
@@ -65,7 +70,7 @@ public class AppUserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return enabled;
     }
 
     @Override
@@ -75,6 +80,6 @@ public class AppUserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

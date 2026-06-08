@@ -20,6 +20,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
-        return AppUserPrincipal.fromDatabase(user.getId(), user.getUsername(), user.getPassword());
+        return AppUserPrincipal.fromDatabase(
+                user.getId(),
+                user.getUsername(),
+                user.getPassword(),
+                user.getRole(),
+                user.isEnabled()
+        );
     }
 }

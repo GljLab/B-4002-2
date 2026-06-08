@@ -1,15 +1,27 @@
 import { http } from './http'
-import type { PageResponse, PostSummary, PostDetail, CreatePostPayload, UpdatePostPayload } from '../types'
+import type {
+  PageResponse,
+  PostSummary,
+  PostDetail,
+  CreatePostPayload,
+  UpdatePostPayload,
+  AuthorStatsDTO,
+  AuthorDTO,
+  UpdateProfilePayload,
+  ChangePasswordPayload,
+} from '../types'
 
 export async function getPublicPosts(
   page = 1,
   size = 10,
   categoryId?: number | null,
   keywordId?: number | null,
+  authorId?: number | null,
 ): Promise<PageResponse<PostSummary>> {
   const params: Record<string, unknown> = { page, size }
   if (categoryId != null) params.categoryId = categoryId
   if (keywordId != null) params.keywordId = keywordId
+  if (authorId != null) params.authorId = authorId
   const { data } = await http.get<PageResponse<PostSummary>>('/posts', { params })
   return data
 }
@@ -44,4 +56,57 @@ export async function batchUpdateCategory(postIds: number[], categoryId: number)
 
 export async function batchAddKeywords(postIds: number[], keywords: string[]): Promise<void> {
   await http.post('/admin/posts/batch/keywords', { postIds, keywords })
+}
+
+export async function getAuthorPosts(params: { status?: string; page?: number; size?: number }): Promise<PageResponse<PostSummary>> {
+  const { data } = await http.get<PageResponse<PostSummary>>('/author/posts', { params })
+  return data
+}
+
+export async function createAuthorPost(payload: CreatePostPayload): Promise<PostDetail> {
+  const { data } = await http.post<PostDetail>('/author/posts', payload)
+  return data
+}
+
+export async function updateAuthorPost(id: number, payload: UpdatePostPayload): Promise<PostDetail> {
+  const { data } = await http.put<PostDetail>(`/author/posts/${id}`, payload)
+  return data
+}
+
+export async function submitForReview(id: number): Promise<void> {
+  await http.put(`/author/posts/${id}/submit`)
+}
+
+export async function deleteAuthorPost(id: number): Promise<void> {
+  await http.delete(`/author/posts/${id}`)
+}
+
+export async function getAuthorStats(): Promise<AuthorStatsDTO> {
+  const { data } = await http.get<AuthorStatsDTO>('/author/stats')
+  return data
+}
+
+export async function getAuthorProfile(): Promise<AuthorDTO> {
+  const { data } = await http.get<AuthorDTO>('/author/profile')
+  return data
+}
+
+export async function updateAuthorProfile(payload: UpdateProfilePayload): Promise<AuthorDTO> {
+  const { data } = await http.put<AuthorDTO>('/author/profile', payload)
+  return data
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  await http.put('/author/password', payload)
+}
+
+export async function getAdminPosts(status?: string): Promise<PostSummary[]> {
+  const params: Record<string, unknown> = {}
+  if (status) params.status = status
+  const { data } = await http.get<PostSummary[]>('/admin/posts', { params })
+  return data
+}
+
+export async function unpublishPost(id: number): Promise<void> {
+  await http.put(`/admin/posts/${id}/unpublish`)
 }

@@ -6,7 +6,8 @@ import dayjs from 'dayjs'
 import { getPublicPosts } from '../api/posts'
 import { getPublicCategories } from '../api/categories'
 import { getKeywordCloud } from '../api/keywords'
-import type { PostSummary, Category, KeywordCloud, PageResponse } from '../types'
+import { getPublicAuthors } from '../api/authors'
+import type { PostSummary, Category, KeywordCloud, AuthorPublicDTO, PageResponse } from '../types'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,20 +20,25 @@ const loading = ref(false)
 
 const categories = ref<Category[]>([])
 const keywords = ref<KeywordCloud[]>([])
+const authors = ref<AuthorPublicDTO[]>([])
 const selectedCategoryId = ref<number | null>(null)
 const selectedKeywordId = ref<number | null>(null)
+const selectedAuthorId = ref<number | null>(null)
 
 function readQueryParams() {
   const qCat = route.query.categoryId
   const qKw = route.query.keywordId
+  const qAuthor = route.query.authorId
   selectedCategoryId.value = qCat ? Number(qCat) : null
   selectedKeywordId.value = qKw ? Number(qKw) : null
+  selectedAuthorId.value = qAuthor ? Number(qAuthor) : null
 }
 
 function pushQueryParams() {
   const query: Record<string, string> = {}
   if (selectedCategoryId.value != null) query.categoryId = String(selectedCategoryId.value)
   if (selectedKeywordId.value != null) query.keywordId = String(selectedKeywordId.value)
+  if (selectedAuthorId.value != null) query.authorId = String(selectedAuthorId.value)
   router.replace({ path: '/', query })
 }
 
@@ -44,6 +50,7 @@ async function loadPosts() {
       size.value,
       selectedCategoryId.value,
       selectedKeywordId.value,
+      selectedAuthorId.value,
     )
     posts.value = data.items
     total.value = data.total
@@ -70,6 +77,14 @@ async function loadKeywords() {
   }
 }
 
+async function loadAuthors() {
+  try {
+    authors.value = await getPublicAuthors()
+  } catch {
+    ElMessage.error('作者列表加载失败')
+  }
+}
+
 async function applyFilter() {
   page.value = 1
   pushQueryParams()
@@ -84,9 +99,14 @@ function onKeywordChange() {
   applyFilter()
 }
 
+function onAuthorChange() {
+  applyFilter()
+}
+
 function clearFilters() {
   selectedCategoryId.value = null
   selectedKeywordId.value = null
+  selectedAuthorId.value = null
   applyFilter()
 }
 
@@ -99,6 +119,7 @@ onMounted(() => {
   readQueryParams()
   loadCategories()
   loadKeywords()
+  loadAuthors()
   loadPosts()
 })
 
@@ -142,8 +163,22 @@ watch(() => route.query, () => {
           :value="kw.id"
         />
       </el-select>
+      <el-select
+        v-model="selectedAuthorId"
+        placeholder="选择作者"
+        clearable
+        style="min-width: 180px"
+        @change="onAuthorChange"
+      >
+        <el-option
+          v-for="author in authors"
+          :key="author.id"
+          :label="author.nickname"
+          :value="author.id"
+        />
+      </el-select>
       <el-button
-        v-if="selectedCategoryId != null || selectedKeywordId != null"
+        v-if="selectedCategoryId != null || selectedKeywordId != null || selectedAuthorId != null"
         @click="clearFilters"
       >
         清除筛选
@@ -167,7 +202,14 @@ watch(() => route.query, () => {
               {{ post.title }}
             </router-link>
           </template>
-          <p class="meta">{{ post.authorName }} · {{ dayjs(post.createdAt).format('YYYY-MM-DD HH:mm:ss') }}</p>
+          <p class="meta">
+            <el-avatar :size="24" :src="post.authorAvatar || undefined" class="author-avatar">
+              {{ post.authorName?.charAt(0) }}
+            </el-avatar>
+            <router-link :to="`/authors/${post.authorId}`" class="author-link">{{ post.authorName }}</router-link>
+            <span>·</span>
+            {{ dayjs(post.createdAt).format('YYYY-MM-DD HH:mm:ss') }}
+          </p>
           <div class="post-tags">
             <el-tag
               v-if="post.categoryPath"
@@ -216,6 +258,26 @@ watch(() => route.query, () => {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.author-avatar {
+  flex-shrink: 0;
+}
+
+.author-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.author-link:hover {
+  opacity: 0.75;
 }
 
 .post-tags {

@@ -9,8 +9,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const form = reactive({
-  username: 'admin',
-  password: 'admin123456',
+  username: '',
+  password: '',
 })
 
 const loading = ref(false)
@@ -25,8 +25,14 @@ async function submit() {
   try {
     await authStore.login({ username: form.username.trim(), password: form.password })
     ElMessage.success('登录成功')
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/admin'
-    await router.push(redirect)
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+    if (redirect) {
+      await router.push(redirect)
+    } else if (authStore.isAdmin) {
+      await router.push('/admin')
+    } else {
+      await router.push('/author')
+    }
   } catch {
     ElMessage.error('用户名或密码错误')
   } finally {
@@ -39,9 +45,9 @@ async function submit() {
   <div class="view-shell login-shell">
     <el-card class="login-card">
       <div class="login-card-head">
-        <p class="login-kicker">管理入口</p>
-        <h1>管理员登录</h1>
-        <p class="login-desc">登录后可发布、编辑和删除你的文章。</p>
+        <p class="login-kicker">BLOG</p>
+        <h1>登录</h1>
+        <p class="login-desc">管理员和作者使用同一入口登录。</p>
       </div>
       <el-form class="auth-form" label-position="top" @submit.prevent="submit">
         <el-form-item label="用户名">

@@ -25,7 +25,11 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    target: ${FLYWAY_TARGET:7}
+    target: ${FLYWAY_TARGET:8}
+  servlet:
+    multipart:
+      max-file-size: 3MB
+      max-request-size: 3MB
 
 management:
   endpoints:
@@ -42,6 +46,8 @@ app:
     refresh-days: ${APP_JWT_REFRESH_DAYS:7}
   testing:
     enabled: ${APP_TESTING_ENABLED:false}
+  upload:
+    path: ${APP_UPLOAD_PATH:./uploads}
 
 logging:
   pattern:

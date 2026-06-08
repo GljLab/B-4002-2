@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +36,11 @@ public class AdminPostController {
     @GetMapping("/mine")
     public List<PostSummaryDTO> mine(@org.springframework.security.core.annotation.AuthenticationPrincipal AppUserPrincipal principal) {
         return postService.listMine(principal.getId());
+    }
+
+    @GetMapping
+    public List<PostSummaryDTO> list(@RequestParam(required = false) String status) {
+        return postService.listAllPosts(status);
     }
 
     @PostMapping
@@ -56,6 +62,12 @@ public class AdminPostController {
     public void delete(@org.springframework.security.core.annotation.AuthenticationPrincipal AppUserPrincipal principal,
                        @PathVariable Long id) {
         postService.deletePost(principal.getId(), id);
+    }
+
+    @PutMapping("/{id}/unpublish")
+    public PostDetailDTO unpublish(@PathVariable Long id) {
+        postService.unpublishPost(id);
+        return postService.getDetail(id);
     }
 
     @PutMapping("/batch/category")

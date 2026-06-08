@@ -29,13 +29,15 @@ public class PublicPostController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(50) int size,
             @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) Long keywordId
+            @RequestParam(required = false) Long keywordId,
+            @RequestParam(required = false) Long authorId
     ) {
-        return postService.listPublic(page, size, categoryId, keywordId);
+        return postService.listPublic(page, size, categoryId, keywordId, authorId);
     }
 
     @GetMapping("/{id}")
     public PostDetailDTO detail(@PathVariable Long id) {
+        postService.incrementViewCount(id);
         return postService.getDetail(id);
     }
 }

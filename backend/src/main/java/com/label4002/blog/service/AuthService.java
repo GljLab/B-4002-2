@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -28,6 +29,9 @@ import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
+
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
+    private static final int LOCK_MINUTES = 15;
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -44,11 +48,36 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthUserDTO loginSession(LoginRequest request,
                                     HttpServletRequest httpServletRequest,
                                     HttpServletResponse httpServletResponse) {
-        Authentication authentication = authenticate(request);
+        UserEntity user = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new UnauthorizedException("用户名或密码错误"));
+
+        if (!user.isEnabled()) {
+            throw new UnauthorizedException("账号已被禁用");
+        }
+
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            throw new UnauthorizedException("账号已锁定，请" + LOCK_MINUTES + "分钟后再试");
+        }
+
+        Authentication authentication;
+        try {
+            authentication = authenticate(request);
+            user.setLoginAttempts(0);
+            user.setLockedUntil(null);
+            user.setLastLoginAt(LocalDateTime.now());
+            userRepository.save(user);
+        } catch (UnauthorizedException ex) {
+            user.setLoginAttempts(user.getLoginAttempts() + 1);
+            if (user.getLoginAttempts() >= MAX_LOGIN_ATTEMPTS) {
+                user.setLockedUntil(LocalDateTime.now().plusMinutes(LOCK_MINUTES));
+            }
+            userRepository.save(user);
+            throw ex;
+        }
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
@@ -57,7 +86,15 @@ public class AuthService {
                 .setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
         AppUserPrincipal principal = (AppUserPrincipal) authentication.getPrincipal();
-        return new AuthUserDTO(principal.getId(), principal.getUsername());
+        UserEntity refreshedUser = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new NotFoundException("用户不存在"));
+        return new AuthUserDTO(
+                refreshedUser.getId(),
+                refreshedUser.getUsername(),
+                refreshedUser.getRole().name(),
+                refreshedUser.getDisplayName(),
+                refreshedUser.getAvatarUrl()
+        );
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -70,7 +107,15 @@ public class AuthService {
         if (principal == null) {
             throw new UnauthorizedException("未登录");
         }
-        return new AuthUserDTO(principal.getId(), principal.getUsername());
+        UserEntity user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new NotFoundException("用户不存在"));
+        return new AuthUserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getRole().name(),
+                user.getDisplayName(),
+                user.getAvatarUrl()
+        );
     }
 
     @Transactional
@@ -108,6 +153,8 @@ public class AuthService {
             ));
         } catch (BadCredentialsException ex) {
             throw new UnauthorizedException("用户名或密码错误");
+        } catch (LockedException ex) {
+            throw new UnauthorizedException("账号已锁定");
         }
     }
 

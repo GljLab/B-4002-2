@@ -7,10 +7,14 @@ public record PostSummaryDTO(
         Long id,
         String title,
         String excerpt,
+        Long authorId,
         String authorName,
+        String authorAvatar,
+        String status,
         Long categoryId,
         String categoryPath,
         List<KeywordDTO> keywords,
+        long viewCount,
         LocalDateTime createdAt
 ) {
 }
