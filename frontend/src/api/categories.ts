@@ -6,6 +6,11 @@ export async function getPublicCategories(): Promise<Category[]> {
   return data
 }
 
+export async function getPublicCategoriesFlat(): Promise<Category[]> {
+  const { data } = await http.get<Category[]>('/categories/flat')
+  return data
+}
+
 export async function getPublicCategory(id: number): Promise<Category> {
   const { data } = await http.get<Category>(`/categories/${id}`)
   return data

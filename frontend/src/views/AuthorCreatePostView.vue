@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { createAuthorPost, submitForReview } from '../api/posts'
-import { getAdminCategoriesFlat } from '../api/categories'
+import { getPublicCategoriesFlat } from '../api/categories'
 import { searchKeywords } from '../api/keywords'
 import { uploadImage } from '../api/upload'
 import type { Category, Keyword } from '../types'
@@ -30,7 +30,7 @@ const categoriesLoading = ref(false)
 async function loadCategories() {
   categoriesLoading.value = true
   try {
-    categories.value = await getAdminCategoriesFlat()
+    categories.value = await getPublicCategoriesFlat()
   } catch {
     categories.value = []
   } finally {

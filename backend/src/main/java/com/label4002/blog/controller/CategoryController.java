@@ -34,6 +34,11 @@ public class CategoryController {
         return categoryService.listTree(true);
     }
 
+    @GetMapping("/categories/flat")
+    public List<CategoryDTO> publicFlat() {
+        return categoryService.listAllFlat(true);
+    }
+
     @GetMapping("/categories/{id}")
     public CategoryDTO publicGet(@PathVariable Long id) {
         return categoryService.getById(id);

@@ -229,6 +229,10 @@ onMounted(loadPending)
             <span>提交时间：{{ dayjs(selectedDetail.createdAt).format('YYYY-MM-DD HH:mm') }}</span>
           </div>
 
+          <div v-if="selectedDetail.keywords && selectedDetail.keywords.length" class="detail-keywords">
+            <el-tag v-for="kw in selectedDetail.keywords" :key="kw.id" size="small" style="margin-right: 4px">{{ kw.name }}</el-tag>
+          </div>
+
           <el-divider />
 
           <div class="review-content">
@@ -295,6 +299,13 @@ onMounted(loadPending)
   gap: var(--space-3);
   color: var(--color-text-3);
   font-size: 13px;
+}
+
+.detail-keywords {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .review-content {
