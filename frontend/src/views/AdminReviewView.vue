@@ -70,12 +70,13 @@ async function handleApprove(id: number) {
 
 async function handleReject(id: number) {
   try {
-    const { value: reason } = await ElMessageBox.prompt('请输入拒绝原因', '拒绝文章', {
+    const result = await ElMessageBox.prompt('请输入拒绝原因', '拒绝文章', {
       confirmButtonText: '确认拒绝',
       cancelButtonText: '取消',
       inputPattern: /\S+/,
       inputErrorMessage: '拒绝原因不能为空',
     })
+    const reason = (result as any).value as string
     await reviewAction(id, { action: 'REJECT', reason })
     ElMessage.success('已拒绝')
     selectedDetail.value = null
